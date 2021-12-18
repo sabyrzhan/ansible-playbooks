@@ -1,0 +1,60 @@
+- name: Check Docker already initialized
+  stat:
+    path: "{{ docker_status_file_loc }}"
+  register: stat_result
+
+- name: Install packages that allow apt to be used over HTTPS
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - ca-certificates
+    - curl
+    - gnupg
+    - lsb-release
+  when: not stat_result.stat.exists
+
+- name: Add an apt signing key for Docker
+  ansible.builtin.shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --yes -o /usr/share/keyrings/docker-archive-keyring.gpg
+  become: true
+  when: not stat_result.stat.exists
+    
+
+- name: Add apt repository for stable version
+  ansible.builtin.shell: |
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  when: not stat_result.stat.exists
+
+- name: Create /etc/docker folder
+  file: path=/etc/docker state=directory
+  when: not stat_result.stat.exists
+
+- name: Change docker cgroup driver to systemd
+  ansible.builtin.copy:
+    src: docker-daemon.json
+    dest: /etc/docker/daemon.json
+  when: not stat_result.stat.exists
+
+- name: Install docker and its dependecies
+  ansible.builtin.shell: |
+    apt-get update
+    export DOCKER_VERSION=$(apt-cache madison docker-ce | awk 'NR==1{ print $3 }')
+    apt-get install -y docker-ce=$DOCKER_VERSION docker-ce-cli=$DOCKER_VERSION containerd.io
+  become: true
+  notify:
+    - docker status
+  when: not stat_result.stat.exists
+
+- name: Add vagrant user to docker group
+  user:
+    name: vagrant
+    group: docker
+  when: not stat_result.stat.exists
+
+- name: Write Docker completion stat file
+  ansible.builtin.shell: echo 1 > {{ docker_status_file_loc }}

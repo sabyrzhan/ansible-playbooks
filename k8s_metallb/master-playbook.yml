@@ -1,0 +1,54 @@
+---
+- hosts: master
+  remote_user: "{{ username }}"
+  become: true
+  tasks:
+  - import_tasks: docker-playbook.yml
+  - import_tasks: kube-common.yml
+
+  - name: Check K8s already initialized
+    stat:
+      path: "{{ k8s_status_file_loc }}"
+    register: stat_result
+  
+  - name: Initialize the Kubernetes cluster using kubeadm
+    ansible.builtin.shell: |
+      kubeadm init --apiserver-advertise-address="{{ ansible_default_ipv4.address }}" --apiserver-cert-extra-sans="{{ ansible_default_ipv4.address }}"  --node-name master --pod-network-cidr={{ pod_cidr }}
+    become: true
+    when: not stat_result.stat.exists
+
+  - name: Setup user kubeconfig
+    command: "{{ item }}"
+    with_items:
+     - mkdir -p /home/{{ username }}/.kube
+     - cp -i /etc/kubernetes/admin.conf /home/{{ username }}/.kube/config
+     - chown {{ username }}:{{ username }} /home/{{ username }}/.kube/config
+    when: not stat_result.stat.exists
+  
+  - name: Install calico pod network
+    become: false
+    command: kubectl create -f https://docs.projectcalico.org/manifests/calico.yaml
+    when: not stat_result.stat.exists
+  
+  - name: Generate join command
+    command: |
+      kubeadm token create --print-join-command
+    register: join_command
+    when: not stat_result.stat.exists
+
+  - name: Copy join command to file
+    become: false
+    delegate_to: localhost
+    copy:
+      content={{ join_command.stdout_lines[0] }}
+      dest=/tmp/join-command
+    when: not stat_result.stat.exists
+  
+  - import_tasks: metallb-playbook.yml
+    when: not stat_result.stat.exists
+  
+  - name: Write K8s completion stat file
+    ansible.builtin.shell: echo 1 > {{ k8s_status_file_loc }}
+  
+  handlers:
+  - import_tasks: common-handlers.yml

@@ -1,0 +1,23 @@
+---
+- hosts: nodes
+  become: true
+  remote_user: sabyrzhan
+  tasks:
+  - import_tasks: docker-playbook.yml
+  - import_tasks: kube-common.yml
+  
+  - name: Check K8s already initialized
+    stat:
+      path: "{{ k8s_status_file_loc }}"
+    register: stat_result
+
+  - name: Copy the join command to server location
+    copy: src=/tmp/join-command dest=/tmp/join-command.sh mode=0777
+    when: not stat_result.stat.exists
+
+  - name: Join the node to cluster
+    command: sh /tmp/join-command.sh
+    when: not stat_result.stat.exists
+  
+  - name: Write K8s completion stat file
+    ansible.builtin.shell: echo 1 > {{ k8s_status_file_loc }}

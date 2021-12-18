@@ -1,0 +1,17 @@
+- name: "Set strictARP: true in kube-proxy"
+  ansible.builtin.shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
+  become: false
+
+- name: Copy metallb-config.yml
+  template: src={{ playbook_dir }}/metallb-config.yml dest=/tmp/config.yml mode=0777
+
+- name: Apply MetalLB manifests
+  ansible.builtin.shell: |
+    kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.11.0/manifests/namespace.yaml
+    kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.11.0/manifests/metallb.yaml
+  become: false
+
+- name: Apply metallb config file
+  command: kubectl apply -f /tmp/config.yml  
+  become: false

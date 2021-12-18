@@ -1,0 +1,67 @@
+- name: Install packages that allow apt to be used over HTTPS
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - apt-transport-https
+    - ca-certificates
+  when: not stat_result.stat.exists
+
+- name: Add an apt signing key for Kubernetes
+  command: |
+    curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  become: true
+  when: not stat_result.stat.exists
+
+- name: Add apt repository for stable version
+  apt_repository:
+    repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+  when: not stat_result.stat.exists
+
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+  when: not stat_result.stat.exists
+
+- name: Disable swap
+  command: swapoff -a
+  when: not stat_result.stat.exists and ansible_swaptotal_mb > 0
+
+- name: Install Kubernetes binaries
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - kubelet
+      - kubeadm
+      - kubectl
+  when: not stat_result.stat.exists
+
+- name: Hold installed K8s binaries
+  command: |
+    apt-mark hold kubelet kubeadm kubectl
+  when: not stat_result.stat.exists
+
+- name: Configure node ip
+  lineinfile:
+    path: /etc/default/kubelet
+    line: KUBELET_EXTRA_ARGS=--node-ip={{ ansible_default_ipv4.address }}
+    create: yes
+  when: not stat_result.stat.exists
+
+- name: Restart kubelet
+  service:
+    name: kubelet
+    daemon_reload: yes
+    state: restarted
+  when: not stat_result.stat.exists
