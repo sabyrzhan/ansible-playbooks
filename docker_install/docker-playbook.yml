@@ -1,0 +1,42 @@
+---
+- hosts: master
+  remote_user: sabyrzhan
+  become: true
+  tasks:
+  - name: Install docker
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - docker.io
+      - net-tools
+  - name: Add vagrant user to docker group
+    user:
+      name: sabyrzhan
+      group: docker
+  handlers:
+  - name: docker status
+    service: name=docker state=started
+
+- hosts: nodes
+  remote_user: sabyrzhan
+  become: true
+  tasks:
+  - name: Install docker
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - docker.io
+      - net-tools
+  - name: Add vagrant user to docker group
+    user:
+      name: sabyrzhan
+      group: docker
+  handlers:
+  - name: docker status
+    service: name=docker state=started
