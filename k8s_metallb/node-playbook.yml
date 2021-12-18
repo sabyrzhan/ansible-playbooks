@@ -21,3 +21,6 @@
   
   - name: Write K8s completion stat file
     ansible.builtin.shell: echo 1 > {{ k8s_status_file_loc }}
+  
+  handlers:
+  - import_tasks: common-handlers.yml

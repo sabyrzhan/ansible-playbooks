@@ -7,10 +7,12 @@ k8s_status_file_loc=/home/sabyrzhan/.k8s_complete
 172.16.31.9
 
 [master:vars]
-pod_cidr=172.16.0.0/24
+pod_cidr=172.16.31.0/24
 metallb_addresses=172.16.31.10-172.16.31.250
 
 [nodes]
 172.16.31.10
 172.16.31.11
 172.16.31.12
+172.16.31.13
+172.16.31.14

@@ -50,9 +50,9 @@
     - docker status
   when: not stat_result.stat.exists
 
-- name: Add vagrant user to docker group
+- name: Add username to docker group
   user:
-    name: vagrant
+    name: "{{ username }}"
     group: docker
   when: not stat_result.stat.exists
 
