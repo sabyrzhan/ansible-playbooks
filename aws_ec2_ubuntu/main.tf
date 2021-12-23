@@ -47,27 +47,27 @@ resource "aws_instance" "web" {
 
   provisioner "local-exec" {
     command = <<EOL
-echo "[all]" >> .ec2_hosts
+echo "[all]" > .ec2_hosts
 echo ${self.public_ip} >> .ec2_hosts
 EOL
   }
 }
 
 resource "aws_internet_gateway" "web_gateway" {
-  vpc_id = "${aws_vpc.web_vpc.id}"
+  vpc_id = aws_vpc.web_vpc.id
 }
 
 resource "aws_route_table" "web_route_table" {
-  vpc_id = "${aws_vpc.web_vpc.id}"
+  vpc_id = aws_vpc.web_vpc.id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.web_gateway.id}"
+    gateway_id = aws_internet_gateway.web_gateway.id
   }
 }
 
 resource "aws_route_table_association" "web_route_table_assoc" {
-  subnet_id      = "${aws_subnet.web_subnet.id}"
-  route_table_id = "${aws_route_table.web_route_table.id}"
+  subnet_id      = aws_subnet.web_subnet.id
+  route_table_id = aws_route_table.web_route_table.id
 }
 
 resource "aws_vpc" "web_vpc" {
@@ -77,14 +77,14 @@ resource "aws_vpc" "web_vpc" {
 }
 
 resource "aws_subnet" "web_subnet" {
-  cidr_block = "${cidrsubnet(aws_vpc.web_vpc.cidr_block, 3, 1)}"
-  vpc_id = "${aws_vpc.web_vpc.id}"
+  cidr_block = cidrsubnet(aws_vpc.web_vpc.cidr_block, 3, 1)
+  vpc_id = aws_vpc.web_vpc.id
   map_public_ip_on_launch = true
 }
 
 resource "aws_security_group" "web_sec_group" {
   name = "allow-all-sg"
-  vpc_id = "${aws_vpc.web_vpc.id}"
+  vpc_id = aws_vpc.web_vpc.id
   ingress {
     cidr_blocks = [
       "0.0.0.0/0"

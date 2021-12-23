@@ -7,7 +7,7 @@
   tasks:
     - name: Check already provisioned
       stat:
-        path: "/home/ubuntu/.ec2_provision_complete"
+        path: "/home/{{ username }}/.ec2_provision_complete"
       register: stat_result
     - name: Install docker
       apt:
@@ -28,6 +28,9 @@
         name: "{{ username }}"
         group: docker
       when: not stat_result.stat.exists
+
+    - name: Write provision completion stat file
+      ansible.builtin.shell: "echo 1 > /home/{{ username }}/.ec2_provision_complete"
 
   handlers:
     - name: docker status
