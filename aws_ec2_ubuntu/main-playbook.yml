@@ -1,0 +1,34 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  vars:
+    - username: ubuntu
+  become: true
+  tasks:
+    - name: Check already provisioned
+      stat:
+        path: "/home/ubuntu/.ec2_provision_complete"
+      register: stat_result
+    - name: Install docker
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - docker.io
+          - net-tools
+          - youtube-dl
+      notify:
+        - docker status
+      when: not stat_result.stat.exists
+
+    - name: "Add username={{ username }} to docker group"
+      user:
+        name: "{{ username }}"
+        group: docker
+      when: not stat_result.stat.exists
+
+  handlers:
+    - name: docker status
+      service: name=docker state=started
