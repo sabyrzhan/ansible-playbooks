@@ -1,4 +1,4 @@
-# My common tasks automated in ansible scripts
+# 👨‍💻 📝 ▶️ My common tasks automated in ansible scripts
 ## Overview
 This repo just contains automated tasks in ansible scripts that I use mostly.
 
