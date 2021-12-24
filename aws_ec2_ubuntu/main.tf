@@ -36,19 +36,26 @@ data "aws_ami" "ubuntu" {
 locals {
   ssh_key_root = "/Users/sabyrzhan/.ssh"
   user_public_key = "${local.ssh_key_root}/id_rsa.pub"
+  suffix = terraform.workspace
+  aws_key_name = "aws_key_${local.suffix}"
 }
 
 resource "aws_instance" "web" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
-  key_name = "aws_key"
+  key_name = local.aws_key_name
   security_groups = [aws_security_group.web_sec_group.id]
   subnet_id = aws_subnet.web_subnet.id
 
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = 40
+  }
+
   provisioner "local-exec" {
     command = <<EOL
-echo "[all]" > .ec2_hosts
-echo ${self.public_ip} >> .ec2_hosts
+echo "[all]" > .ec2_hosts_${local.suffix}
+echo ${self.public_ip} >> .ec2_hosts_${local.suffix}
 EOL
   }
 }
@@ -83,7 +90,6 @@ resource "aws_subnet" "web_subnet" {
 }
 
 resource "aws_security_group" "web_sec_group" {
-  name = "allow-all-sg"
   vpc_id = aws_vpc.web_vpc.id
   ingress {
     cidr_blocks = [
@@ -102,7 +108,7 @@ resource "aws_security_group" "web_sec_group" {
 }
 
 resource "aws_key_pair" "access_public_key" {
-  key_name   = "aws_key"
+  key_name   = local.aws_key_name
   public_key = file(local.user_public_key)
 }
 
