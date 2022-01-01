@@ -4,15 +4,15 @@ docker_status_file_loc=/home/sabyrzhan/.docker_complete
 k8s_status_file_loc=/home/sabyrzhan/.k8s_complete
 
 [master]
-172.16.31.9
+192.168.64.7
 
 [master:vars]
-pod_cidr=172.16.0.0/24
-metallb_addresses=172.16.31.10-172.16.31.250
+pod_cidr=192.168.64.0/24
+metallb_addresses=192.168.64.10-192.168.64.250
 
 [nodes]
-172.16.31.10
-172.16.31.11
-172.16.31.12
-172.16.31.13
-172.16.31.14
+192.168.64.2
+192.168.64.3
+192.168.64.4
+192.168.64.5
+192.168.64.6
