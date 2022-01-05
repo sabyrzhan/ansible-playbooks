@@ -49,7 +49,7 @@ resource "aws_instance" "web" {
 
   ebs_block_device {
     device_name = "/dev/sda1"
-    volume_size = 40
+    volume_size = var.volume_size
   }
 
   provisioner "local-exec" {
