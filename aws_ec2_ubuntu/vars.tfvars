@@ -1,2 +1,2 @@
 region = "us-east-1"
-volume_size = 40
+volume_size = 8
