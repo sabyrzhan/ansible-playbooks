@@ -12,6 +12,7 @@
       packages:
       - docker.io
       - net-tools
+      - docker-compose
   - name: Add vagrant user to docker group
     user:
       name: sabyrzhan
