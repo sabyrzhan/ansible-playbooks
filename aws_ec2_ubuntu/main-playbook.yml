@@ -9,6 +9,7 @@
       stat:
         path: "/home/{{ username }}/.ec2_provision_complete"
       register: stat_result
+
     - name: Install docker
       apt:
         name: "{{ packages }}"
@@ -31,6 +32,23 @@
 
     - name: Write provision completion stat file
       ansible.builtin.shell: "echo 1 > /home/{{ username }}/.ec2_provision_complete"
+      when: not stat_result.stat.exists
+
+    - name: Check create_vpn.sh already provisioned
+      stat:
+        path: "/home/{{ username }}/.create_vpn_complete"
+      register: stat_result
+
+    - name: Copy create_vpn.sh script
+      template:
+        src: create_vpn.sh.j2
+        dest: /home/{{ username }}/create_vpn.sh
+        mode: '0755'
+      when: not stat_result.stat.exists
+
+    - name: Write create_vpn completion stat file
+      ansible.builtin.shell: "echo 1 > /home/{{ username }}/.create_vpn_complete"
+      when: not stat_result.stat.exists
 
   handlers:
     - name: docker status
