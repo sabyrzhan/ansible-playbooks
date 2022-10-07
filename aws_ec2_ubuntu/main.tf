@@ -35,7 +35,8 @@ data "aws_ami" "ubuntu" {
 
 locals {
   ssh_key_root = "/Users/sabyrzhan/.ssh"
-  user_public_key = "${local.ssh_key_root}/id_rsa.pub"
+  user_private_key = "${local.ssh_key_root}/id_ed25519_aws"
+  user_public_key = "${local.ssh_key_root}/id_ed25519_aws.pub"
   suffix = terraform.workspace
   aws_key_name = "aws_key_${local.suffix}"
 }
@@ -56,6 +57,8 @@ resource "aws_instance" "web" {
     command = <<EOL
 echo "[all]" > .ec2_hosts_${local.suffix}
 echo ${self.public_ip} >> .ec2_hosts_${local.suffix}
+echo "[all:vars]" >> .ec2_hosts_${local.suffix}
+echo  "ansible_ssh_private_key_file=${local.user_private_key}" >> .ec2_hosts_${local.suffix}
 EOL
   }
 }

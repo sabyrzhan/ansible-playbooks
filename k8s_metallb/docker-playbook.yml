@@ -14,6 +14,7 @@
     - curl
     - gnupg
     - lsb-release
+    - docker-compose
   when: not stat_result.stat.exists
 
 - name: Add an apt signing key for Docker
