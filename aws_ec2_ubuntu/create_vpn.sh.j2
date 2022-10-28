@@ -1,7 +1,37 @@
-OVPN_DATA="ovpn-data-main"
-docker volume create --name $OVPN_DATA
-docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://{{ inventory_hostname }}
-docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki
-docker run -v $OVPN_DATA:/etc/openvpn -d -p 1194:1194/udp --cap-add=NET_ADMIN kylemanna/openvpn
-docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full CLIENTNAME nopass
-docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient CLIENTNAME > CLIENTNAME.ovpn
+{% raw %}
+#!/bin/bash
+AVAIL_PORT_START=1194
+AVAIL_PORT_END=1199
+NEW_OVPN_DATA="ovpn-data-default"
+NEW_PORT="1194"
+
+get_docker_ports() {
+ exists="no"
+ for i in $(docker ps --format "{{ .Ports }}" | sort); do
+   if [[ $i == *"$1"* ]]; then
+     exists="yes"
+     break
+   fi
+ done
+ echo $exists
+}
+
+for (( i=$AVAIL_PORT_START; i<=$AVAIL_PORT_END; i++ ));
+do
+  result=$(get_docker_ports $i)
+  if [[ $result == "no" ]]; then
+    NEW_OVPN_DATA="ovpn-data-$i"
+    NEW_PORT=$i
+    break
+  fi
+done
+{% endraw %}
+
+docker volume create --name $NEW_OVPN_DATA
+docker run -v $NEW_OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://{{ inventory_hostname }}
+docker run -v $NEW_OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki
+docker run -v $NEW_OVPN_DATA:/etc/openvpn -d -p $NEW_PORT:1194/udp --cap-add=NET_ADMIN kylemanna/openvpn
+docker run -v $NEW_OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full CLIENTNAME nopass
+docker run -v $NEW_OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient CLIENTNAME > CLIENTNAME.ovpn
+
+sed -i "s/1194/$NEW_PORT/g" CLIENTNAME.ovpn
