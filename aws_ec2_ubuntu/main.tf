@@ -107,7 +107,7 @@ resource "aws_security_group" "web_sec_group" {
       "0.0.0.0/0"
     ]
     from_port = 1194
-    to_port = 1194
+    to_port = 1199
     protocol = "udp"
   }
   egress {
