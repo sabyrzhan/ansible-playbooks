@@ -1,6 +1,6 @@
 # How to access host VPN in `multipass`?
 Not sure if this is a workaround or solution, but I was able to make this work by nat-ing the multipass bridge with my vpn interface.
-I added nat on `utun1` from `bridge100:network to any -> (utun1)` to file `/etc/pf.conf`. Then I reloaded the file: `$ sudo pfctl -f /etc/pf.conf`.
+I added `nat on utun1 from `bridge100:network to any -> (utun1)` to file `/etc/pf.conf`. Then I reloaded the file: `$ sudo pfctl -f /etc/pf.conf`.
 
 I'll just note that it's important to put the above line in the correct place in the file - after the other nat- line, otherwise it will not be accepted.
 
