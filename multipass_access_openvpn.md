@@ -4,6 +4,21 @@ I added `nat on utun1 from bridge100:network to any -> (utun1)` to file `/etc/pf
 
 I'll just note that it's important to put the above line in the correct place in the file - after the other nat- line, otherwise it will not be accepted.
 
+For example final `pf.conf` content in my case after addition looks like following:
+```
+#
+# com.apple anchor point
+#
+scrub-anchor "com.apple/*"
+nat-anchor "com.apple/*"                                      <--- this is the existing configuration
+nat on utun3 from bridge100:network to any -> (utun3)         <--- this is my addition
+rdr-anchor "com.apple/*"
+dummynet-anchor "com.apple/*"
+anchor "com.apple/*"
+load anchor "com.apple" from "/etc/pf.anchors/com.apple"
+```
+
+
 To see which `utun` you have do either one of:
 1. `netstat -nr | grep tun`. Here  you should have smth like. (here `utun3` is yours)
 ```
