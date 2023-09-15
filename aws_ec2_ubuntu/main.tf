@@ -22,7 +22,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 
   filter {
@@ -43,7 +43,7 @@ locals {
 
 resource "aws_instance" "web" {
   ami           = data.aws_ami.ubuntu.id
-  instance_type = "t3.micro"
+  instance_type = var.instance_type
   key_name = local.aws_key_name
   security_groups = [aws_security_group.web_sec_group.id]
   subnet_id = aws_subnet.web_subnet.id
@@ -109,6 +109,14 @@ resource "aws_security_group" "web_sec_group" {
     from_port = 1194
     to_port = 1199
     protocol = "udp"
+  }
+  ingress {
+    cidr_blocks = [
+      "0.0.0.0/0"
+    ]
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
   }
   egress {
     from_port = 0
